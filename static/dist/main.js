@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log("prutt");const e=new class{constructor(){this.element=document.querySelector("#cvs"),this.dimensions=this.element.getBoundingClientRect()}getDimensions(){console.log(this.dimensions)}};console.log(e.getDimensions()),console.log("lol")})();
