@@ -1,4 +1,5 @@
 import GameMap from "./map";
+import utils from "./utils";
 
 class Character {
   constructor(params) {
@@ -8,7 +9,6 @@ class Character {
     this.timeMoved = 0;
     this.dimensions = [30, 30];
     this.position = [45, 45];
-    this.delayMove = 700;
 
     //Player direction data
     this.directions = params.directions;
@@ -28,7 +28,22 @@ class Character {
 
     this.floorTypes = params.floorTypes;
     this.tileTypes = params.tileTypes;
+    this.tileEvents = params.tileEvents;
     this.gameMap = GameMap;
+    this.mapTileData = params.mapTileData;
+
+    this.objectTypes = params.objectTypes;
+    this.objectCollision = params.objectCollision;
+
+    //Player floor speeds
+    this.delayMove = {};
+    this.delayMove[this.floorTypes.path] = 400;
+    this.delayMove[this.floorTypes.grass] = 800;
+    this.delayMove[this.floorTypes.ice] = 300;
+    this.delayMove[this.floorTypes.conveyorU] = 200;
+    this.delayMove[this.floorTypes.conveyorD] = 200;
+    this.delayMove[this.floorTypes.conveyorL] = 200;
+    this.delayMove[this.floorTypes.conveyorR] = 200;
   }
 
   placeAt(x, y) {
@@ -48,11 +63,30 @@ class Character {
       return false;
     }
 
-    if (t - this.timeMoved >= this.delayMove) {
+    var moveSpeed = this.delayMove[
+      this.tileTypes[
+        this.mapTileData.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])]
+          .type
+      ].floor
+    ];
+
+    if (t - this.timeMoved >= moveSpeed) {
       this.placeAt(this.tileTo[0], this.tileTo[1]);
 
+      //tileevents
+      if (
+        this.mapTileData.map[utils.toIndex(this.tileTo[0], this.tileTo[1])]
+          .eventEnter != null
+      ) {
+        this.mapTileData.map[
+          utils.toIndex(this.tileTo[0], this.tileTo[1])
+        ].eventEnter(this);
+      }
+      //tileevents
+
       var tileFloor = this.tileTypes[
-        this.gameMap[this.toIndex(this.tileFrom[0], this.tileFrom[1])]
+        this.mapTileData.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])]
+          .type
       ].floor;
 
       if (tileFloor == this.floorTypes.ice) {
@@ -78,11 +112,11 @@ class Character {
         this.tileFrom[1] * this.tileH + (this.tileH - this.dimensions[1]) / 2;
 
       if (this.tileTo[0] != this.tileFrom[0]) {
-        var diff = (this.tileW / this.delayMove) * (t - this.timeMoved);
+        var diff = (this.tileW / moveSpeed) * (t - this.timeMoved);
         this.position[0] += this.tileTo[0] < this.tileFrom[0] ? 0 - diff : diff;
       }
       if (this.tileTo[1] != this.tileFrom[1]) {
-        var diff = (this.tileH / this.delayMove) * (t - this.timeMoved);
+        var diff = (this.tileH / moveSpeed) * (t - this.timeMoved);
         this.position[1] += this.tileTo[1] < this.tileFrom[1] ? 0 - diff : diff;
       }
 
@@ -99,20 +133,18 @@ class Character {
     }
 
     if (
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.path &&
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.ice &&
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.conveyorU &&
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.conveyorD &&
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.conveyorL &&
-      this.tileTypes[this.gameMap[this.toIndex(x, y)]].floor !=
-        this.floorTypes.conveyorR
+      typeof this.delayMove[
+        this.tileTypes[this.mapTileData.map[utils.toIndex(x, y)].type].floor
+      ] == "undefined"
     ) {
       return false;
+    }
+
+    if (this.mapTileData.map[utils.toIndex(x, y)].object != null) {
+      var o = this.mapTileData.map[utils.toIndex(x, y)].object;
+      if (this.objectTypes[o.type].collision == this.objectCollision.solid) {
+        return false;
+      }
     }
 
     return true;

@@ -1,13 +1,14 @@
 class Viewport {
   constructor(params) {
-    const { canvasW, canvasH, tileW, tileH } = params;
-    this.screen = [canvasW, canvasH];
+    this.screen = [params.canvasW, params.canvasH];
     this.startTile = [0, 0];
     this.endTile = [0, 0];
     this.offset = [0, 0];
 
-    this.tileW = tileW;
-    this.tileH = tileH;
+    this.tileW = params.tileW;
+    this.tileH = params.tileH;
+    this.mapW = params.mapW;
+    this.mapH = params.mapH;
   }
 
   update(px, py) {
