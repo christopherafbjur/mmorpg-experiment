@@ -7,6 +7,7 @@ class Tile {
     this.roofType = 0;
     this.eventEnter = null;
     this.object = null;
+    this.itemStack = null;
   }
 }
 

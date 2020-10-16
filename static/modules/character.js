@@ -1,5 +1,12 @@
 import GameMap from "./map";
+import Inventory from "./items/inventory";
 import utils from "./utils";
+import objectTypes from "./objects/data/objectTypes";
+import objectCollision from "./objects/data/objectCollision";
+import tileTypes from "./tiles/data/tileTypes";
+import floorTypes from "./tiles/data/floorTypes";
+import playerDirections from "./player/data/directions";
+import playerSprites from "./player/data/sprites";
 
 class Character {
   constructor(params) {
@@ -10,15 +17,11 @@ class Character {
     this.dimensions = [30, 30];
     this.position = [45, 45];
 
-    //Player direction data
-    this.directions = params.directions;
+    this.direction = playerDirections.up;
+    this.sprites = playerSprites;
 
-    this.direction = this.directions.up;
-    this.sprites = {};
-    this.sprites[this.directions.up] = [{ x: 0, y: 120, w: 30, h: 30 }];
-    this.sprites[this.directions.right] = [{ x: 0, y: 150, w: 30, h: 30 }];
-    this.sprites[this.directions.down] = [{ x: 0, y: 180, w: 30, h: 30 }];
-    this.sprites[this.directions.left] = [{ x: 0, y: 210, w: 30, h: 30 }];
+    //Inventory
+    this.inventory = new Inventory(3);
 
     //Map data
     this.tileW = params.map.tiles.width;
@@ -26,24 +29,19 @@ class Character {
     this.mapW = params.map.dimensions.horizontalTilesAmount;
     this.mapH = params.map.dimensions.verticalTilesAmount;
 
-    this.floorTypes = params.floorTypes;
-    this.tileTypes = params.tileTypes;
     this.tileEvents = params.tileEvents;
     this.gameMap = GameMap;
     this.mapTileData = params.mapTileData;
 
-    this.objectTypes = params.objectTypes;
-    this.objectCollision = params.objectCollision;
-
     //Player floor speeds
     this.delayMove = {};
-    this.delayMove[this.floorTypes.path] = 400;
-    this.delayMove[this.floorTypes.grass] = 800;
-    this.delayMove[this.floorTypes.ice] = 300;
-    this.delayMove[this.floorTypes.conveyorU] = 200;
-    this.delayMove[this.floorTypes.conveyorD] = 200;
-    this.delayMove[this.floorTypes.conveyorL] = 200;
-    this.delayMove[this.floorTypes.conveyorR] = 200;
+    this.delayMove[floorTypes.path] = 400;
+    this.delayMove[floorTypes.grass] = 800;
+    this.delayMove[floorTypes.ice] = 300;
+    this.delayMove[floorTypes.conveyorU] = 200;
+    this.delayMove[floorTypes.conveyorD] = 200;
+    this.delayMove[floorTypes.conveyorL] = 200;
+    this.delayMove[floorTypes.conveyorR] = 200;
   }
 
   placeAt(x, y) {
@@ -64,7 +62,7 @@ class Character {
     }
 
     var moveSpeed = this.delayMove[
-      this.tileTypes[
+      tileTypes[
         this.mapTileData.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])]
           .type
       ].floor
@@ -84,25 +82,24 @@ class Character {
       }
       //tileevents
 
-      var tileFloor = this.tileTypes[
-        this.mapTileData.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])]
-          .type
-      ].floor;
+      var tileFloor =
+        tileTypes[
+          this.mapTileData.map[
+            utils.toIndex(this.tileFrom[0], this.tileFrom[1])
+          ].type
+        ].floor;
 
-      if (tileFloor == this.floorTypes.ice) {
+      if (tileFloor == floorTypes.ice) {
         if (this.canMoveDirection(this.direction)) {
           this.moveDirection(this.direction, t);
         }
-      } else if (tileFloor == this.floorTypes.conveyorL && this.canMoveLeft()) {
+      } else if (tileFloor == floorTypes.conveyorL && this.canMoveLeft()) {
         this.moveLeft(t);
-      } else if (
-        tileFloor == this.floorTypes.conveyorR &&
-        this.canMoveRight()
-      ) {
+      } else if (tileFloor == floorTypes.conveyorR && this.canMoveRight()) {
         this.moveRight(t);
-      } else if (tileFloor == this.floorTypes.conveyorU && this.canMoveUp()) {
+      } else if (tileFloor == floorTypes.conveyorU && this.canMoveUp()) {
         this.moveUp(t);
-      } else if (tileFloor == this.floorTypes.conveyorD && this.canMoveDown()) {
+      } else if (tileFloor == floorTypes.conveyorD && this.canMoveDown()) {
         this.moveDown(t);
       }
     } else {
@@ -134,7 +131,7 @@ class Character {
 
     if (
       typeof this.delayMove[
-        this.tileTypes[this.mapTileData.map[utils.toIndex(x, y)].type].floor
+        tileTypes[this.mapTileData.map[utils.toIndex(x, y)].type].floor
       ] == "undefined"
     ) {
       return false;
@@ -142,7 +139,7 @@ class Character {
 
     if (this.mapTileData.map[utils.toIndex(x, y)].object != null) {
       var o = this.mapTileData.map[utils.toIndex(x, y)].object;
-      if (this.objectTypes[o.type].collision == this.objectCollision.solid) {
+      if (objectTypes[o.type].collision == objectCollision.solid) {
         return false;
       }
     }
@@ -165,11 +162,11 @@ class Character {
 
   canMoveDirection(d) {
     switch (d) {
-      case this.directions.up:
+      case playerDirections.up:
         return this.canMoveUp();
-      case this.directions.down:
+      case playerDirections.down:
         return this.canMoveDown();
-      case this.directions.left:
+      case playerDirections.left:
         return this.canMoveLeft();
       default:
         return this.canMoveRight();
@@ -178,11 +175,11 @@ class Character {
 
   moveDirection(d, t) {
     switch (d) {
-      case this.directions.up:
+      case playerDirections.up:
         return this.moveUp(t);
-      case this.directions.down:
+      case playerDirections.down:
         return this.moveDown(t);
-      case this.directions.left:
+      case playerDirections.left:
         return this.moveLeft(t);
       default:
         return this.moveRight(t);
@@ -192,26 +189,46 @@ class Character {
   moveLeft(t) {
     this.tileTo[0] -= 1;
     this.timeMoved = t;
-    this.direction = this.directions.left;
+    this.direction = playerDirections.left;
   }
   moveRight(t) {
     this.tileTo[0] += 1;
     this.timeMoved = t;
-    this.direction = this.directions.right;
+    this.direction = playerDirections.right;
   }
   moveUp(t) {
     this.tileTo[1] -= 1;
     this.timeMoved = t;
-    this.direction = this.directions.up;
+    this.direction = playerDirections.up;
   }
   moveDown(t) {
     this.tileTo[1] += 1;
     this.timeMoved = t;
-    this.direction = this.directions.down;
+    this.direction = playerDirections.down;
   }
 
-  toIndex(x, y) {
-    return y * this.mapW + x;
+  pickUp() {
+    if (
+      this.tileTo[0] != this.tileFrom[0] ||
+      this.tileTo[1] != this.tileFrom[1]
+    ) {
+      return false;
+    }
+    var is = this.mapTileData.map[
+      utils.toIndex(this.tileFrom[0], this.tileFrom[1])
+    ].itemStack;
+    if (is != null) {
+      var remains = this.inventory.addItems(is.type, is.qty);
+      if (remains) {
+        is.qty = remains;
+      } else {
+        this.mapTileData.map[
+          utils.toIndex(this.tileFrom[0], this.tileFrom[1])
+        ].itemStack = null;
+      }
+    }
+
+    return true;
   }
 }
 

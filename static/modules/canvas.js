@@ -1,16 +1,26 @@
 import Character from "./character";
 import Viewport from "./viewport";
-import Tileset from "./tileset";
 import TileMap from "./tilemap";
 import GameMap from "./map";
 import MapObject from "./mapobject";
+import PlacedItemStack from "./items/placedItemStack";
+import Sprite from "./sprite";
+
+//Data imports
+import itemTypes from "./items/data/itemTypes";
+import objectTypes from "./objects/data/objectTypes";
+import tileTypes from "./tiles/data/tileTypes";
 import utils from "./utils";
+
+//Singleton
+import ctx from "./ctx";
+import tileset from "./tileset";
 class Canvas {
   constructor(params) {
     const { tiles, dimensions } = params.map;
     this.element = document.querySelector("#cvs");
-    this.ctx = this.element.getContext("2d");
-
+    /* this.ctx = this.element.getContext("2d"); */
+    ctx.setElement(this.element.getContext("2d"));
     this.tileW = tiles.width;
     this.tileH = tiles.height;
     this.mapW = dimensions.horizontalTilesAmount;
@@ -38,163 +48,21 @@ class Canvas {
     ];
     this.currentSpeed = 0;
 
-    //game objects start
-    this.objectCollision = {
-      none: 0,
-      solid: 1,
-    };
-
-    this.objectTypes = {
-      1: {
-        name: "Box",
-        sprite: [{ x: 40, y: 160, w: 40, h: 40 }],
-        offset: [0, 0],
-        collision: this.objectCollision.solid,
-        zIndex: 1,
-      },
-      2: {
-        name: "Broken Box",
-        sprite: [{ x: 40, y: 200, w: 40, h: 40 }],
-        offset: [0, 0],
-        collision: this.objectCollision.none,
-        zIndex: 1,
-      },
-      3: {
-        name: "Tree top",
-        sprite: [{ x: 80, y: 160, w: 80, h: 80 }],
-        offset: [-20, -20],
-        collision: this.objectCollision.solid,
-        zIndex: 3,
-      },
-    };
-
-    //game objects end
-
-    this.floorTypes = {
-      solid: 0,
-      path: 1,
-      water: 2,
-      ice: 3,
-      conveyorU: 4,
-      conveyorD: 5,
-      conveyorL: 6,
-      conveyorR: 7,
-      grass: 8,
-    };
-
-    this.tileTypes = {
-      0: {
-        colour: "#685b48",
-        floor: this.floorTypes.solid,
-        sprite: [{ x: 0, y: 0, w: 40, h: 40 }],
-      },
-      1: {
-        colour: "#5aa457",
-        floor: this.floorTypes.grass,
-        sprite: [{ x: 40, y: 0, w: 40, h: 40 }],
-      },
-      2: {
-        colour: "#e8bd7a",
-        floor: this.floorTypes.path,
-        sprite: [{ x: 80, y: 0, w: 40, h: 40 }],
-      },
-      3: {
-        colour: "#286625",
-        floor: this.floorTypes.solid,
-        sprite: [{ x: 120, y: 0, w: 40, h: 40 }],
-      },
-      4: {
-        colour: "#678fd9",
-        floor: this.floorTypes.water,
-        sprite: [
-          { x: 160, y: 0, w: 40, h: 40, d: 200 },
-          { x: 200, y: 0, w: 40, h: 40, d: 200 },
-          { x: 160, y: 40, w: 40, h: 40, d: 200 },
-          { x: 200, y: 40, w: 40, h: 40, d: 200 },
-          { x: 160, y: 40, w: 40, h: 40, d: 200 },
-          { x: 200, y: 0, w: 40, h: 40, d: 200 },
-        ],
-      },
-      5: {
-        colour: "#eeeeff",
-        floor: this.floorTypes.ice,
-        sprite: [{ x: 120, y: 120, w: 40, h: 40 }],
-      },
-      6: {
-        colour: "#cccccc",
-        floor: this.floorTypes.conveyorL,
-        sprite: [
-          { x: 0, y: 40, w: 40, h: 40, d: 200 },
-          { x: 40, y: 40, w: 40, h: 40, d: 200 },
-          { x: 80, y: 40, w: 40, h: 40, d: 200 },
-          { x: 120, y: 40, w: 40, h: 40, d: 200 },
-        ],
-      },
-      7: {
-        colour: "#cccccc",
-        floor: this.floorTypes.conveyorR,
-        sprite: [
-          { x: 120, y: 80, w: 40, h: 40, d: 200 },
-          { x: 80, y: 80, w: 40, h: 40, d: 200 },
-          { x: 40, y: 80, w: 40, h: 40, d: 200 },
-          { x: 0, y: 80, w: 40, h: 40, d: 200 },
-        ],
-      },
-      8: {
-        colour: "#cccccc",
-        floor: this.floorTypes.conveyorD,
-        sprite: [
-          { x: 160, y: 200, w: 40, h: 40, d: 200 },
-          { x: 160, y: 160, w: 40, h: 40, d: 200 },
-          { x: 160, y: 120, w: 40, h: 40, d: 200 },
-          { x: 160, y: 80, w: 40, h: 40, d: 200 },
-        ],
-      },
-      9: {
-        colour: "#cccccc",
-        floor: this.floorTypes.conveyorU,
-        sprite: [
-          { x: 200, y: 80, w: 40, h: 40, d: 200 },
-          { x: 200, y: 120, w: 40, h: 40, d: 200 },
-          { x: 200, y: 160, w: 40, h: 40, d: 200 },
-          { x: 200, y: 200, w: 40, h: 40, d: 200 },
-        ],
-      },
-      10: {
-        colour: "#ccaa00",
-        floor: this.floorTypes.solid,
-        sprite: [{ x: 40, y: 120, w: 40, h: 40 }],
-      },
-      11: {
-        colour: "#ccaa00",
-        floor: this.floorTypes.solid,
-        sprite: [{ x: 80, y: 120, w: 40, h: 40 }],
-      },
-    };
-
     //Automatically set sprite duration based on available sprites
-    Object.keys(this.tileTypes).forEach((x) => {
-      console.log(this.tileTypes[x]);
-      this.tileTypes[x]["animated"] = this.tileTypes[x].sprite.length > 1;
-      if (this.tileTypes[x]["animated"]) {
+    Object.keys(tileTypes).forEach((x) => {
+      tileTypes[x]["animated"] = tileTypes[x].sprite.length > 1;
+      if (tileTypes[x]["animated"]) {
         var t = 0;
-        this.tileTypes[x].sprite.forEach((sprite) => {
+        tileTypes[x].sprite.forEach((sprite) => {
           sprite["start"] = t;
 
           t += sprite.d;
 
           sprite["end"] = t;
         });
-        this.tileTypes[x]["spriteDuration"] = t;
+        tileTypes[x]["spriteDuration"] = t;
       }
     });
-
-    this.directions = {
-      up: 0,
-      right: 1,
-      down: 2,
-      left: 3,
-    };
 
     this.gameMap = GameMap;
 
@@ -237,17 +105,29 @@ class Canvas {
     //Add some objects on our map
     this.createTestObjects();
 
+    //Do something
+    for (var i = 3; i < 8; i++) {
+      var ps = new PlacedItemStack({
+        id: 1,
+        quantity: 1,
+        mapTileData: this.mapTileData,
+      });
+      ps.placeAt(i, 1);
+    }
+    for (var i = 3; i < 8; i++) {
+      var ps = new PlacedItemStack({
+        id: 1,
+        quantity: 1,
+        mapTileData: this.mapTileData,
+      });
+      ps.placeAt(3, i);
+    }
+
     this.player = new Character({
       ...params,
-      floorTypes: this.floorTypes,
-      tileTypes: this.tileTypes,
       tileEvents: this.tileEvents,
-      directions: this.directions,
       mapTileData: this.mapTileData,
-      objectTypes: this.objectTypes,
-      objectCollision: this.objectCollision,
     });
-    this.tileset = new Tileset();
   }
 
   createTestObjects() {
@@ -287,9 +167,8 @@ class Canvas {
   }
 
   drawGame() {
-    if (this.ctx === null) return console.error("CTX is null");
-    if (!this.tileset.loaded)
-      return requestAnimationFrame(() => this.drawGame());
+    if (ctx.element === null) return console.error("CTX is null");
+    if (!tileset.loaded) return requestAnimationFrame(() => this.drawGame());
 
     var currentFrameTime = Date.now();
     var timeElapsed = currentFrameTime - this.lastFrameTime;
@@ -315,6 +194,8 @@ class Canvas {
         this.player.moveLeft(this.gameTime);
       } else if (this.keysDown[39] && this.player.canMoveRight()) {
         this.player.moveRight(this.gameTime);
+      } else if (this.keysDown[80]) {
+        this.player.pickUp();
       }
     }
 
@@ -330,14 +211,12 @@ class Canvas {
       utils.toIndex(this.player.tileTo[0], this.player.tileTo[1])
     ].roof;
 
-    this.ctx.fillStyle = "#000000";
-    this.ctx.fillRect(0, 0, this.viewport.screen[0], this.viewport.screen[1]);
-
-    console.log(
-      this.viewport.startTile[1],
-      this.viewport.endTile[1],
-      this.viewport.startTile[0],
-      this.viewport.endTile[0]
+    ctx.element.fillStyle = "#000000";
+    ctx.element.fillRect(
+      0,
+      0,
+      this.viewport.screen[0],
+      this.viewport.screen[1]
     );
 
     //Draw map
@@ -353,43 +232,36 @@ class Canvas {
           ++x
         ) {
           if (z == 0) {
-            var tile = this.tileTypes[
+            tileTypes[
               this.mapTileData.map[utils.toIndex(x, y)].type
-            ];
-
-            var sprite = this.getFrame(
-              tile.sprite,
-              tile.spriteDuration,
+            ].sprite.draw(
               this.gameTime,
-              tile.animated
-            );
-            this.ctx.drawImage(
-              this.tileset.image,
-              sprite.x,
-              sprite.y,
-              sprite.w,
-              sprite.h,
               this.viewport.offset[0] + x * this.tileW,
-              this.viewport.offset[1] + y * this.tileH,
-              this.tileW,
-              this.tileH
+              this.viewport.offset[1] + y * this.tileH
             );
+          } else if (z === 1) {
+            var is = this.mapTileData.map[utils.toIndex(x, y)].itemStack;
+            if (is != null) {
+              itemTypes[is.type].sprite.draw(
+                this.gameTime,
+                this.viewport.offset[0] +
+                  x * this.tileW +
+                  itemTypes[is.type].offset[0],
+                this.viewport.offset[1] +
+                  y * this.tileH +
+                  itemTypes[is.type].offset[1]
+              );
+            }
           }
 
           var o = this.mapTileData.map[utils.toIndex(x, y)].object;
-          if (o != null && this.objectTypes[o.type].zIndex == z) {
-            var ot = this.objectTypes[o.type];
+          if (o != null && objectTypes[o.type].zIndex == z) {
+            var ot = objectTypes[o.type];
 
-            this.ctx.drawImage(
-              this.tileset.image,
-              ot.sprite[0].x,
-              ot.sprite[0].y,
-              ot.sprite[0].w,
-              ot.sprite[0].h,
+            ot.sprite.draw(
+              this.gameTime,
               this.viewport.offset[0] + x * this.tileW + ot.offset[0],
-              this.viewport.offset[1] + y * this.tileH + ot.offset[1],
-              ot.sprite[0].w,
-              ot.sprite[0].h
+              this.viewport.offset[1] + y * this.tileH + ot.offset[1]
             );
           }
 
@@ -399,50 +271,54 @@ class Canvas {
             this.mapTileData.map[utils.toIndex(x, y)].roof != playerRoof1 &&
             this.mapTileData.map[utils.toIndex(x, y)].roof != playerRoof2
           ) {
-            tile = this.tileTypes[
+            tileTypes[
               this.mapTileData.map[utils.toIndex(x, y)].roofType
-            ];
-            sprite = this.getFrame(
-              tile.sprite,
-              tile.spriteDuration,
+            ].sprite.draw(
               this.gameTime,
-              tile.animated
-            );
-            this.ctx.drawImage(
-              this.tileset.image,
-              sprite.x,
-              sprite.y,
-              sprite.w,
-              sprite.h,
               this.viewport.offset[0] + x * this.tileW,
-              this.viewport.offset[1] + y * this.tileH,
-              this.tileW,
-              this.tileH
+              this.viewport.offset[1] + y * this.tileH
             );
           }
         }
       }
 
       if (z == 1) {
-        var sprite = this.player.sprites[this.player.direction];
-        this.ctx.drawImage(
-          this.tileset.image,
-          sprite[0].x,
-          sprite[0].y,
-          sprite[0].w,
-          sprite[0].h,
+        this.player.sprites[this.player.direction].draw(
+          this.gameTime,
           this.viewport.offset[0] + this.player.position[0],
-          this.viewport.offset[1] + this.player.position[1],
-          this.player.dimensions[0],
-          this.player.dimensions[1]
+          this.viewport.offset[1] + this.player.position[1]
         );
       }
-    }
+    } //Closing Z loop
 
+    ctx.element.textAlign = "right";
+    for (var i = 0; i < this.player.inventory.spaces; i++) {
+      ctx.element.fillStyle = "#ddccaa";
+      ctx.element.fillRect(10 + i * 50, 350, 40, 40);
+      if (typeof this.player.inventory.stacks[i] != "undefined") {
+        var it = itemTypes[this.player.inventory.stacks[i].type];
+
+        it.sprite.draw(
+          this.gameTime,
+          10 + i * 50 + it.offset[0],
+          350 + it.offset[1]
+        );
+
+        if (this.player.inventory.stacks[i].qty > 1) {
+          ctx.element.fillStyle = "#000000";
+          ctx.element.fillText(
+            "" + this.player.inventory.stacks[i].qty,
+            10 + i * 50 + 38,
+            350 + 38
+          );
+        }
+      }
+    }
+    ctx.element.textAlign = "left";
     //Draw fps info
-    this.ctx.fillStyle = "#ff0000";
-    this.ctx.fillText(`FPS: ${this.framesLastSecond}`, 10, 20);
-    this.ctx.fillText(
+    ctx.element.fillStyle = "#ff0000";
+    ctx.element.fillText(`FPS: ${this.framesLastSecond}`, 10, 20);
+    ctx.element.fillText(
       `Gamespeed: ${this.gameSpeeds[this.currentSpeed].name}`,
       10,
       40
@@ -459,7 +335,7 @@ class Canvas {
     //Initialize canvas dimensions & font
     this.element.width = 400;
     this.element.height = 400;
-    this.ctx.font = "bold 10pt sans-serif";
+    ctx.element.font = "bold 10pt sans-serif";
 
     //Initialize viewport
     this.viewport = new Viewport({
@@ -476,6 +352,9 @@ class Canvas {
       if (e.keyCode >= 37 && e.keyCode <= 40) {
         this.keysDown[e.keyCode] = true;
       }
+      if (e.keyCode === 80) {
+        this.keysDown[e.keyCode] = true;
+      }
     });
     window.addEventListener("keyup", (e) => {
       if (e.keyCode >= 37 && e.keyCode <= 40) {
@@ -486,6 +365,9 @@ class Canvas {
           this.currentSpeed >= this.gameSpeeds.length - 1
             ? 0
             : this.currentSpeed + 1;
+      }
+      if (e.keyCode === 80) {
+        this.keysDown[e.keyCode] = false;
       }
     });
 

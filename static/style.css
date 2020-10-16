@@ -7,4 +7,5 @@ body {
   background: red;
   transform-origin: top left;
   /* transform: scale(1.2, 1.2); */
+  width: 100%;
 }

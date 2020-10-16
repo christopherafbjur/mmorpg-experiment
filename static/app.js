@@ -3,4 +3,3 @@ import settings from "./modules/settings";
 
 const canvas = new Canvas(settings);
 canvas.initialize();
-console.log("lol");

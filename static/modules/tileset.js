@@ -13,10 +13,11 @@ class Tileset {
       console.error("Failed to load tileset");
     };
     this.image.onload = () => {
+      console.log("loaded tileset");
       this.loaded = true;
     };
     this.image.src = this.url;
   }
 }
 
-export default Tileset;
+export default new Tileset();
