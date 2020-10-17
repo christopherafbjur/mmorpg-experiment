@@ -1,5 +1,5 @@
-import Canvas from "./modules/canvas.js";
-import settings from "./modules/settings";
+import Game from "./modules/game.js";
+import settings from "./modules/mapSettings";
 
-const canvas = new Canvas(settings);
+const canvas = new Game(settings);
 canvas.initialize();

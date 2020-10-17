@@ -1,9 +1,7 @@
-import settings from "./settings";
+import SETTINGS from "./mapSettings";
 class Utils {
   toIndex(x, y) {
-    const { dimensions } = settings.map;
-    const mapW = dimensions.horizontalTilesAmount;
-    return y * mapW + x;
+    return y * SETTINGS.tiles.horizontalCount + x;
   }
 }
 

@@ -1,15 +1,19 @@
-import GameMap from "./map";
-import Inventory from "./items/inventory";
-import utils from "./utils";
-import objectTypes from "./objects/data/objectTypes";
-import objectCollision from "./objects/data/objectCollision";
-import tileTypes from "./tiles/data/tileTypes";
-import floorTypes from "./tiles/data/floorTypes";
-import playerDirections from "./player/data/directions";
-import playerSprites from "./player/data/sprites";
+import GameMap from "../map/data/map";
+import Inventory from "../items/inventory";
+import utils from "../utils";
+import objectTypes from "../objects/data/objectTypes";
+import objectCollision from "../objects/data/objectCollision";
+import tileTypes from "../tiles/data/tileTypes";
+import floorTypes from "../tiles/data/floorTypes";
+import playerDirections from "./data/directions";
+import playerSprites from "./data/sprites";
+import SETTINGS from "../mapSettings.json";
+
+//Singleton
+import tilemap from "../tiles/tilemap";
 
 class Character {
-  constructor(params) {
+  constructor(mapTileData) {
     //Player movement data
     this.tileFrom = [1, 1];
     this.tileTo = [1, 1];
@@ -22,16 +26,6 @@ class Character {
 
     //Inventory
     this.inventory = new Inventory(3);
-
-    //Map data
-    this.tileW = params.map.tiles.width;
-    this.tileH = params.map.tiles.height;
-    this.mapW = params.map.dimensions.horizontalTilesAmount;
-    this.mapH = params.map.dimensions.verticalTilesAmount;
-
-    this.tileEvents = params.tileEvents;
-    this.gameMap = GameMap;
-    this.mapTileData = params.mapTileData;
 
     //Player floor speeds
     this.delayMove = {};
@@ -48,8 +42,10 @@ class Character {
     this.tileFrom = [x, y];
     this.tileTo = [x, y];
     this.position = [
-      this.tileW * x + (this.tileW - this.dimensions[0]) / 2,
-      this.tileH * y + (this.tileH - this.dimensions[1]) / 2,
+      SETTINGS.tiles.width * x +
+        (SETTINGS.tiles.width - this.dimensions[0]) / 2,
+      SETTINGS.tiles.height * y +
+        (SETTINGS.tiles.height - this.dimensions[1]) / 2,
     ];
   }
 
@@ -63,8 +59,7 @@ class Character {
 
     var moveSpeed = this.delayMove[
       tileTypes[
-        this.mapTileData.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])]
-          .type
+        tilemap.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])].type
       ].floor
     ];
 
@@ -73,20 +68,18 @@ class Character {
 
       //tileevents
       if (
-        this.mapTileData.map[utils.toIndex(this.tileTo[0], this.tileTo[1])]
-          .eventEnter != null
+        tilemap.map[utils.toIndex(this.tileTo[0], this.tileTo[1])].eventEnter !=
+        null
       ) {
-        this.mapTileData.map[
-          utils.toIndex(this.tileTo[0], this.tileTo[1])
-        ].eventEnter(this);
+        tilemap.map[utils.toIndex(this.tileTo[0], this.tileTo[1])].eventEnter(
+          this
+        );
       }
       //tileevents
 
       var tileFloor =
         tileTypes[
-          this.mapTileData.map[
-            utils.toIndex(this.tileFrom[0], this.tileFrom[1])
-          ].type
+          tilemap.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])].type
         ].floor;
 
       if (tileFloor == floorTypes.ice) {
@@ -104,16 +97,18 @@ class Character {
       }
     } else {
       this.position[0] =
-        this.tileFrom[0] * this.tileW + (this.tileW - this.dimensions[0]) / 2;
+        this.tileFrom[0] * SETTINGS.tiles.width +
+        (SETTINGS.tiles.width - this.dimensions[0]) / 2;
       this.position[1] =
-        this.tileFrom[1] * this.tileH + (this.tileH - this.dimensions[1]) / 2;
+        this.tileFrom[1] * SETTINGS.tiles.height +
+        (SETTINGS.tiles.height - this.dimensions[1]) / 2;
 
       if (this.tileTo[0] != this.tileFrom[0]) {
-        var diff = (this.tileW / moveSpeed) * (t - this.timeMoved);
+        var diff = (SETTINGS.tiles.width / moveSpeed) * (t - this.timeMoved);
         this.position[0] += this.tileTo[0] < this.tileFrom[0] ? 0 - diff : diff;
       }
       if (this.tileTo[1] != this.tileFrom[1]) {
-        var diff = (this.tileH / moveSpeed) * (t - this.timeMoved);
+        var diff = (SETTINGS.tiles.height / moveSpeed) * (t - this.timeMoved);
         this.position[1] += this.tileTo[1] < this.tileFrom[1] ? 0 - diff : diff;
       }
 
@@ -125,20 +120,25 @@ class Character {
   }
 
   canMoveTo(x, y) {
-    if (x < 0 || x >= this.mapW || y < 0 || y >= this.mapH) {
+    if (
+      x < 0 ||
+      x >= SETTINGS.tiles.horizontalCount ||
+      y < 0 ||
+      y >= SETTINGS.tiles.verticalCount
+    ) {
       return false;
     }
 
     if (
       typeof this.delayMove[
-        tileTypes[this.mapTileData.map[utils.toIndex(x, y)].type].floor
+        tileTypes[tilemap.map[utils.toIndex(x, y)].type].floor
       ] == "undefined"
     ) {
       return false;
     }
 
-    if (this.mapTileData.map[utils.toIndex(x, y)].object != null) {
-      var o = this.mapTileData.map[utils.toIndex(x, y)].object;
+    if (tilemap.map[utils.toIndex(x, y)].object != null) {
+      var o = tilemap.map[utils.toIndex(x, y)].object;
       if (objectTypes[o.type].collision == objectCollision.solid) {
         return false;
       }
@@ -214,15 +214,14 @@ class Character {
     ) {
       return false;
     }
-    var is = this.mapTileData.map[
-      utils.toIndex(this.tileFrom[0], this.tileFrom[1])
-    ].itemStack;
+    var is =
+      tilemap.map[utils.toIndex(this.tileFrom[0], this.tileFrom[1])].itemStack;
     if (is != null) {
       var remains = this.inventory.addItems(is.type, is.qty);
       if (remains) {
         is.qty = remains;
       } else {
-        this.mapTileData.map[
+        tilemap.map[
           utils.toIndex(this.tileFrom[0], this.tileFrom[1])
         ].itemStack = null;
       }

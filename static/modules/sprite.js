@@ -1,6 +1,6 @@
 //Singleton
-import ctx from "./ctx";
-import tileset from "./tileset";
+import canvas from "./canvas";
+import tileset from "./tiles/tileset";
 
 export default class Sprite {
   constructor(data) {
@@ -51,7 +51,7 @@ export default class Sprite {
         ? [0, 0]
         : this.frames[frameIdx].offset;
 
-    ctx.element.drawImage(
+    canvas.ctx.drawImage(
       tileset.image,
       this.frames[frameIdx].x,
       this.frames[frameIdx].y,

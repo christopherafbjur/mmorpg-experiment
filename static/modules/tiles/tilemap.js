@@ -1,4 +1,7 @@
+import SETTINGS from "../mapSettings.json";
+import gameMap from "../map/data/map";
 import Tile from "./tile";
+import rooflist from "./data/roofList";
 
 class TileMap {
   constructor() {
@@ -6,13 +9,21 @@ class TileMap {
     this.w = 0;
     this.h = 0;
     this.levels = 4; //Hardcoded. In a proper map engine we may wish to calculate this dynamically when loading in our list of object types we'll be using on our map.
+
+    this.buildMapFromData();
+    this.addRoofs();
+    this.addTestTileWithEvent();
   }
 
-  buildMapFromData(d, w, h) {
+  buildMapFromData() {
+    const map = gameMap;
+    const w = SETTINGS.tiles.horizontalCount;
+    const h = SETTINGS.tiles.verticalCount;
+
     this.w = w;
     this.h = h;
 
-    if (d.length != w * h) {
+    if (map.length != w * h) {
       return false;
     }
 
@@ -20,15 +31,15 @@ class TileMap {
 
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
-        this.map.push(new Tile(x, y, d[y * w + x]));
+        this.map.push(new Tile(x, y, map[y * w + x]));
       }
     }
     return true;
   }
 
-  addRoofs(roofs) {
-    for (var i in roofs) {
-      var r = roofs[i];
+  addRoofs() {
+    for (var i in rooflist) {
+      var r = rooflist[i];
       if (
         r.x < 0 ||
         r.y < 0 ||
@@ -49,6 +60,13 @@ class TileMap {
       }
     }
   }
+
+  addTestTileWithEvent() {
+    ///Used for adding an event tile for a specific tile, in this case tilemap with index 42
+    this.map[2 * SETTINGS.tiles.horizontalCount + 2].eventEnter = function () {
+      console.log("EVENT TILE: Entered tile 2,2");
+    };
+  }
 }
 
-export default TileMap;
+export default new TileMap();
