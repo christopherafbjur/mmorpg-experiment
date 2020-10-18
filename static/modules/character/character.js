@@ -13,7 +13,7 @@ import SETTINGS from "../mapSettings.json";
 import tilemap from "../tiles/tilemap";
 
 class Character {
-  constructor(mapTileData) {
+  constructor() {
     //Player movement data
     this.tileFrom = [1, 1];
     this.tileTo = [1, 1];

@@ -108,6 +108,7 @@ class Game {
           this.drawMapItems(x, y, z);
           this.drawMapTerrain(x, y, z);
           this.drawMapRoofs(x, y, z);
+          this.drawMapLightning(x, y, z);
         }
       }
       this.drawMapPlayer(z);
@@ -117,6 +118,12 @@ class Game {
   drawVoid() {
     canvas.ctx.fillStyle = "#000000";
     canvas.ctx.fillRect(0, 0, this.viewport.screen[0], this.viewport.screen[1]);
+  }
+
+  drawMapLightning(x, y, z) {
+    /* const opacity = utils.distanceTo([x, y], this.player.position) / 100;
+    canvas.ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+    canvas.ctx.fillRect(0, 0, this.viewport.screen[0], this.viewport.screen[1]); */
   }
 
   drawMapFloors(x, y, z) {
