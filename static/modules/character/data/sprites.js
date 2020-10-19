@@ -201,12 +201,5 @@ export default {
       offset: [0, 0],
       zIndex: 1,
     },
-  ] /* new Sprite(
-    [
-      { x: 96, y: 160, w: 32, h: 32 },
-      { x: 160, y: 160, w: 32, h: 32 },
-      { x: 224, y: 160, w: 32, h: 32 },
-    ],
-    spriteSheetName
-  ) */,
+  ],
 };
