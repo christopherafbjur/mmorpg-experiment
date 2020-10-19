@@ -18,8 +18,8 @@ class Character {
     this.tileFrom = [1, 1];
     this.tileTo = [1, 1];
     this.timeMoved = 0;
-    this.dimensions = [30, 30];
-    this.position = [45, 45];
+    this.dimensions = [32, 32];
+    this.position = [32, 32];
 
     this.direction = playerDirections.up;
     this.sprites = playerSprites;

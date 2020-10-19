@@ -18,7 +18,9 @@ import test from "../test";
 //JSON
 import SETTINGS from "../mapSettings.json";
 class Game {
-  constructor() {}
+  constructor() {
+    this.playerNotMoving = false;
+  }
 
   runGame() {
     if (canvas.ctx === null) return console.error("CTX is null");
@@ -41,8 +43,8 @@ class Game {
   initialize() {
     canvas.initialize({
       element: document.querySelector("#cvs"),
-      width: 400,
-      height: 400,
+      width: 320,
+      height: 320,
     });
 
     this.keyboard = new KeyboardController();
@@ -60,24 +62,30 @@ class Game {
 
   drawPlayerInventory() {
     canvas.ctx.textAlign = "right";
+    canvas.ctx.font = "10px Arial";
     for (var i = 0; i < this.player.inventory.spaces; i++) {
       canvas.ctx.fillStyle = "#ddccaa";
-      canvas.ctx.fillRect(10 + i * 50, 350, 40, 40);
+      canvas.ctx.fillRect(
+        i * 33,
+        367,
+        SETTINGS.tiles.width,
+        SETTINGS.tiles.height
+      );
       if (typeof this.player.inventory.stacks[i] != "undefined") {
         var it = itemTypes[this.player.inventory.stacks[i].type];
 
         it.sprite.draw(
           controller.gameTime,
-          10 + i * 50 + it.offset[0],
-          350 + it.offset[1]
+          i * 33 + it.offset[0],
+          367 + it.offset[1]
         );
 
         if (this.player.inventory.stacks[i].qty > 1) {
-          canvas.ctx.fillStyle = "#000000";
+          canvas.ctx.fillStyle = "#ffffff";
           canvas.ctx.fillText(
             "" + this.player.inventory.stacks[i].qty,
-            10 + i * 50 + 38,
-            350 + 38
+            i * 33 + 30,
+            367 + 30
           );
         }
       }
@@ -87,6 +95,7 @@ class Game {
   drawGameInformation() {
     canvas.ctx.textAlign = "left";
     canvas.ctx.fillStyle = "#ff0000";
+    canvas.ctx.font = "12px Arial";
     canvas.ctx.fillText(`FPS: ${controller.getGameFPS()}`, 10, 20);
     canvas.ctx.fillText(`Gamespeed: ${controller.getGameSpeed()}`, 10, 40);
   }
@@ -109,7 +118,7 @@ class Game {
           this.drawMapTerrain(x, y, z);
           this.drawMapRoofs(x, y, z);
           //Seem to be the most CPU costly approach, but how do we render more smooth darkness?
-          this.drawMapLightningTiles(x, y, z);
+          /* this.drawMapLightningTiles(x, y, z); */
           /* this.debugDrawCoordinates(x, y); */
         }
       }
@@ -224,14 +233,29 @@ class Game {
   }
   drawMapTerrain(x, y, z) {
     var o = tilemap.map[utils.toIndex(x, y)].object;
-    if (o != null && objectTypes[o.type].zIndex == z) {
+    if (o != null) {
       var ot = objectTypes[o.type];
 
-      ot.sprite.draw(
-        controller.gameTime,
-        this.viewport.offset[0] + x * SETTINGS.tiles.width + ot.offset[0],
-        this.viewport.offset[1] + y * SETTINGS.tiles.height + ot.offset[1]
-      );
+      if (Array.isArray(ot.sprite)) {
+        ot.sprite.forEach((s) => {
+          if (z === s.zIndex) {
+            s.sprite.draw(
+              controller.gameTime,
+              this.viewport.offset[0] + x * SETTINGS.tiles.width + s.offset[0],
+              this.viewport.offset[1] + y * SETTINGS.tiles.height + s.offset[1]
+            );
+          }
+        });
+        //Kontrollera olika delar av terräng, olika z index beroende på del exempelvis 4 sprite träd
+      } else {
+        if (objectTypes[o.type].zIndex == z) {
+          ot.sprite.draw(
+            controller.gameTime,
+            this.viewport.offset[0] + x * SETTINGS.tiles.width + ot.offset[0],
+            this.viewport.offset[1] + y * SETTINGS.tiles.height + ot.offset[1]
+          );
+        }
+      }
     }
   }
   drawMapRoofs(x, y, z) {
@@ -258,12 +282,27 @@ class Game {
   }
 
   drawMapPlayer(z) {
-    if (z !== 1) return;
-    this.player.sprites[this.player.direction].draw(
-      controller.gameTime,
-      this.viewport.offset[0] + this.player.position[0],
-      this.viewport.offset[1] + this.player.position[1]
-    );
+    /* if (z !== 1) return; */
+    if (Array.isArray(this.player.sprites[this.player.direction])) {
+      this.player.sprites[this.player.direction].forEach((s) => {
+        if (z === s.zIndex) {
+          s.sprite.draw(
+            controller.gameTime,
+            this.viewport.offset[0] + this.player.position[0] + s.offset[0],
+            this.viewport.offset[1] + this.player.position[1] + s.offset[1],
+            this.playerNotMoving
+          );
+        }
+      });
+    } else {
+      if (z === 1) {
+        this.player.sprites[this.player.direction].draw(
+          controller.gameTime,
+          this.viewport.offset[0] + this.player.position[0],
+          this.viewport.offset[1] + this.player.position[1]
+        );
+      }
+    }
   }
 
   handlePlayerActions() {
@@ -271,10 +310,10 @@ class Game {
       paused: controller.isPaused(),
       time: controller.gameTime,
     };
-    const playerNotMoving =
+    this.playerNotMoving =
       !this.player.processMovement(game.time) && !game.paused;
 
-    if (playerNotMoving) {
+    if (this.playerNotMoving) {
       if (this.keyboard.keyDown[38] && this.player.canMoveUp()) {
         this.player.moveUp(game.time);
       } else if (this.keyboard.keyDown[40] && this.player.canMoveDown()) {

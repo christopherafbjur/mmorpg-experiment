@@ -1,7 +1,7 @@
 {
     "tiles": {
-      "width": 40,
-      "height": 40,
+      "width": 32,
+      "height": 32,
       "horizontalCount": 20,
       "verticalCount": 20
     }

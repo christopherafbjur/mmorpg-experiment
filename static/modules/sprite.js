@@ -3,12 +3,13 @@ import canvas from "./canvas";
 import tileset from "./tiles/tileset";
 
 export default class Sprite {
-  constructor(data) {
+  constructor(data, sheet) {
     this.data = data;
     this.animated = data.length > 1;
     this.frameCount = data.length;
     this.duration = 0;
     this.loop = true;
+    this.sheet = sheet;
     this.initialize();
   }
 
@@ -27,7 +28,7 @@ export default class Sprite {
     this.frames = this.data;
   }
 
-  draw(t, x, y) {
+  draw(t, x, y, skipAnimation) {
     var frameIdx = 0;
 
     if (!this.loop && this.animated && t >= this.duration) {
@@ -45,6 +46,9 @@ export default class Sprite {
         }
       }
     }
+    if (skipAnimation) {
+      frameIdx = 0;
+    }
 
     var offset =
       typeof this.frames[frameIdx].offset == "undefined"
@@ -52,7 +56,7 @@ export default class Sprite {
         : this.frames[frameIdx].offset;
 
     canvas.ctx.drawImage(
-      tileset.image,
+      tileset.sheets[this.sheet].image,
       this.frames[frameIdx].x,
       this.frames[frameIdx].y,
       this.frames[frameIdx].w,

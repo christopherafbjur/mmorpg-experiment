@@ -1,3 +1,4 @@
+const spriteSheetName = "tiles";
 //prettier-ignore
 export default [
   { x:5, y:3, w:4, h:7, data: [
@@ -8,13 +9,13 @@ export default [
     10, 10, 11, 11,
     10, 10, 11, 11,
     10, 10, 11, 11
-  ]},
+  ], spriteSheetName},
   { x:15, y:5, w:5, h:4, data: [
     10, 10, 11, 11, 11,
     10, 10, 11, 11, 11,
     10, 10, 11, 11, 11,
     10, 10, 11, 11, 11
-  ]},
+  ], spriteSheetName},
   { x:14, y:9, w:6, h:7, data: [
     10, 10, 10, 11, 11, 11,
     10, 10, 10, 11, 11, 11,
@@ -23,5 +24,5 @@ export default [
     10, 10, 10, 11, 11, 11,
     10, 10, 10, 11, 11, 11,
     10, 10, 10, 11, 11, 11
-  ]}
+  ], spriteSheetName}
 ]
