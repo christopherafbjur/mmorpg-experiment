@@ -108,10 +108,53 @@ class Game {
           this.drawMapItems(x, y, z);
           this.drawMapTerrain(x, y, z);
           this.drawMapRoofs(x, y, z);
-          this.drawMapLightning(x, y, z);
+          //Seem to be the most CPU costly approach, but how do we render more smooth darkness?
+          /* this.drawMapLightningTiles(x, y, z); */
         }
       }
       this.drawMapPlayer(z);
+    }
+
+    /* this.lightningTest1(10); */
+    this.lightningTest2();
+  }
+
+  lightningTest2() {
+    //!Probably the best balance between most cost effective/good looking
+    //!But might get problematic if light position needs to be animated?
+    var cvs = canvas.element;
+    var ctx = cvs.getContext("2d");
+
+    var x = cvs.width / 2,
+      y = cvs.height / 2,
+      // Radii of the white glow.
+      innerRadius = 20,
+      outerRadius = 200,
+      // Radius of the entire circle.
+      radius = 500;
+
+    var gradient = ctx.createRadialGradient(
+      x,
+      y,
+      innerRadius,
+      x,
+      y,
+      outerRadius
+    );
+    gradient.addColorStop(0, "rgba(0,0,0,0)");
+    gradient.addColorStop(1, "rgba(0,0,0,0.95)");
+
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+  lightningTest1(pixels) {
+    //Lighting
+    for (var y = 0; y <= canvas.element.height / pixels; ++y) {
+      for (var x = 0; x <= canvas.element.width / pixels; ++x) {
+        this.drawMapLightningCanvas(x, y, pixels);
+      }
     }
   }
 
@@ -120,10 +163,41 @@ class Game {
     canvas.ctx.fillRect(0, 0, this.viewport.screen[0], this.viewport.screen[1]);
   }
 
-  drawMapLightning(x, y, z) {
-    /* const opacity = utils.distanceTo([x, y], this.player.position) / 100;
+  drawMapLightningTiles(x, y, z) {
+    if (z !== 3) return;
+    const px = this.viewport.offset[0] + this.player.position[0];
+    const py = this.viewport.offset[1] + this.player.position[1];
+    const vx = this.viewport.offset[0] + x * SETTINGS.tiles.width;
+    const vy = this.viewport.offset[1] + y * SETTINGS.tiles.height;
+    /* console.log(vx, this.viewport.offset[0] + this.player.position[0]); */
+    const opacity = utils.distanceTo([vx, vy], [px, py]) / 100;
     canvas.ctx.fillStyle = `rgba(0,0,0,${opacity})`;
-    canvas.ctx.fillRect(0, 0, this.viewport.screen[0], this.viewport.screen[1]); */
+    canvas.ctx.fillRect(vx, vy, SETTINGS.tiles.width, SETTINGS.tiles.height);
+
+    //Write x:y coords on map
+    // const vx = this.viewport.offset[0] + x * SETTINGS.tiles.width;
+    // const vy = this.viewport.offset[1] + y * SETTINGS.tiles.height;
+    // canvas.ctx.fillStyle = "rgba(255,0,0,0.5)";
+    // canvas.ctx.fillRect(vx, vy, SETTINGS.tiles.width, SETTINGS.tiles.height);
+    // console.log(vx, this.player.position[0]);
+
+    // canvas.ctx.textAlign = "center";
+    // canvas.ctx.font = "10px Arial";
+    // canvas.ctx.fillStyle = "#ff0000";
+    // canvas.ctx.fillText(
+    //   `${x}:${y}`,
+    //   vx + SETTINGS.tiles.width / 2,
+    //   vy + SETTINGS.tiles.height / 2
+    // );
+  }
+  drawMapLightningCanvas(x, y, pixels) {
+    const lightingPos = [x * pixels, y * pixels];
+    const playerPos = [canvas.element.width / 2, canvas.element.height / 2];
+
+    const opacity = utils.distanceTo(lightingPos, playerPos) / 200;
+
+    canvas.ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+    canvas.ctx.fillRect(lightingPos[0], lightingPos[1], pixels, pixels);
   }
 
   drawMapFloors(x, y, z) {
